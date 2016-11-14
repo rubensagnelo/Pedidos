@@ -15,6 +15,8 @@ using Api.Models;
 using System.IO;
 using Microsoft.Azure.NotificationHubs;
 
+
+
 namespace ProcessaPedidos
 {
     public class WorkerRole : RoleEntryPoint
@@ -24,16 +26,27 @@ namespace ProcessaPedidos
 
         private CloudQueue cloudQueue;
 
+        private string getCnnStr()
+        {
+            string strch = "cnnStrDEV";
+
+#if !DEBUG
+            strch = "cnnStrPRD";
+#endif
+
+            return System.Configuration.ConfigurationSettings.AppSettings[strch].ToString();
+
+        }
+
         public WorkerRole()
         {
-            //var connectionString = "UseDevelopmentStorage=true";
-            var connectionString = "DefaultEndpointsProtocol=https;AccountName=storagerc;AccountKey=4jaYJR7MEP6W4UjxI4ZNqJ5a+lw/yelS6e++QIg6Mvz5/UK74Dtj1K0ZxtHCBFiIvaqgk+UIwJOkzkbjNUPPUQ==";
+            var connectionString = getCnnStr();
 
             CloudStorageAccount cloudStorageAccount;
 
             if (!CloudStorageAccount.TryParse(connectionString, out cloudStorageAccount))
             {
-
+                return;
             }
 
             var cloudQueueClient = cloudStorageAccount.CreateCloudQueueClient();
@@ -64,7 +77,7 @@ namespace ProcessaPedidos
         public override bool OnStart()
         {
             // Set the maximum number of concurrent connections
-            ServicePointManager.DefaultConnectionLimit = 12;
+            ServicePointManager.DefaultConnectionLimit = 60;
 
             // For information on handling configuration changes
             // see the MSDN topic at https://go.microsoft.com/fwlink/?LinkId=166357.
@@ -109,15 +122,19 @@ namespace ProcessaPedidos
                     TratarPedido(objped);
 
                     cloudQueue.DeleteMessage(pedser);
-                    await Task.Delay(1000);
                 }
-                
-            }
 
+            }
+            await Task.Delay(2000);
 
 
         }
 
+        /// <summary>
+        /// Metod para impressão de log para controle do pedido
+        /// </summary>
+        /// <param name="Titulo">Título do log</param>
+        /// <param name="strLog">detalhe do log</param>
         private void printLog(string Titulo, string strLog)
         {
             
@@ -138,8 +155,10 @@ namespace ProcessaPedidos
             //envio de notificaçãp
             try
             {
-
-                var x = SendNotificationAsync("Pedido: " + obj.idPedido + " realizado com sucesso. ", "Cintia").Result;
+                Task t = SendNotificationAsync("Pedido: " + obj.idPedido + " realizado com sucesso. ", "Cintia");
+                t.Wait();
+                
+                //var x = SendNotificationAsync("Pedido: " + obj.idPedido + " realizado com sucesso. ", "Cintia").Result;
                 return true;
             }
             catch (Exception ex)

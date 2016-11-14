@@ -16,10 +16,21 @@ namespace Api.Controllers
     {
         static CloudQueue cloudQueue;
 
+        private string getCnnStr()
+        {
+            string strch = "cnnStrDEV";
+
+#if !DEBUG
+            strch = "cnnStrPRD";
+#endif
+            return System.Configuration.ConfigurationManager.AppSettings[strch].ToString();
+
+        }
+
         public ValuesController()
         {
-            //var connectionString = "UseDevelopmentStorage=true";
-            var connectionString = "DefaultEndpointsProtocol=https;AccountName=storagerc;AccountKey=4jaYJR7MEP6W4UjxI4ZNqJ5a+lw/yelS6e++QIg6Mvz5/UK74Dtj1K0ZxtHCBFiIvaqgk+UIwJOkzkbjNUPPUQ==";
+
+            var connectionString = getCnnStr();
             CloudStorageAccount cloudStorageAccount;
 
             if (!CloudStorageAccount.TryParse(connectionString, out cloudStorageAccount))
@@ -83,7 +94,7 @@ namespace Api.Controllers
 }
 
 /*
- 
+    //Estrutura do Pedido
 
     {
 	"idPedido":1,
@@ -109,19 +120,17 @@ namespace Api.Controllers
 	"valortotal":1571.75
 }
 
+Instancia do Pedido para Testes
 
-
-                Pedido ped = new Pedido();
-            ped.idCliente = 1;
-            ped.idPedido = 1;
-            ped.DataHora = DateTime.Now;
-            ped.itens = new List<itempedido>();
-            ped.itens.Add( new itempedido(1,"Ventilador ARNO",120.50M));
-            ped.itens.Add(new itempedido(2, "Impressora HP", 310.50M));
-            ped.itens.Add(new itempedido(3, "SmartTV LG", 1140.75M));
-            string str = JsonConvert.SerializeObject(ped);
-
-
+Pedido ped = new Pedido();
+ped.idCliente = 1;
+ped.idPedido = 1;
+ped.DataHora = DateTime.Now;
+ped.itens = new List<itempedido>();
+ped.itens.Add( new itempedido(1,"Ventilador ARNO",120.50M));
+ped.itens.Add(new itempedido(2, "Impressora HP", 310.50M));
+ped.itens.Add(new itempedido(3, "SmartTV LG", 1140.75M));
+string str = JsonConvert.SerializeObject(ped);
 
 
     */
